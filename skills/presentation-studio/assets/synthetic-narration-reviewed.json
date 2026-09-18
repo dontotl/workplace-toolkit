@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "reviewed": true,
+  "review_basis": "Public synthetic narration approved for a local smoke test.",
+  "slides": [
+    {
+      "physical_index": 1,
+      "title": "Synthetic local media check",
+      "text": "안녕하세요. 이것은 공개된 합성 문장으로 수행하는 로컬 음성 점검입니다.",
+      "reviewed": true
+    }
+  ]
+}

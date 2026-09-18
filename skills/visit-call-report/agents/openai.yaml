@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visit/Call Report"
+  short_description: "Draft Korean meeting reports with traceable customer history"
+  default_prompt: "Use $visit-call-report to turn these notes and selected history files into a source-backed Korean report."

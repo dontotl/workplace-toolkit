@@ -1,0 +1,19 @@
+{
+  "name": "workplace-toolkit",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Portable research, Codex PPT translation, meeting reports and local narrated presentations.",
+  "author": {
+    "name": "JungHoon Yoo"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Workplace Toolkit",
+    "shortDescription": "Research, translate and present with Codex.",
+    "longDescription": "Four standalone skills for connected research, current-session PPT translation, Korean meeting reports and local speech/video production. Connections and models are configured by each user.",
+    "developerName": "JungHoon Yoo",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Help me use Workplace Toolkit."
+  }
+}

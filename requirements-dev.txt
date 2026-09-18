@@ -1,0 +1,5 @@
+lxml>=5,<7
+python-pptx>=1.0,<2
+Pillow>=10,<13
+PyYAML>=6,<7
+pytest>=8,<10

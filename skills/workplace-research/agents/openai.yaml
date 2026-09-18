@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workplace Research"
+  short_description: "Research connected sources and download authorized documents"
+  default_prompt: "Use $workplace-research to investigate this topic with citations and clearly state source access gaps."

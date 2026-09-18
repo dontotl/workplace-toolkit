@@ -1,0 +1,7 @@
+{
+  "profile": "example-team",
+  "sources": [
+    {"system": "sharepoint", "label": "Approved team library", "url": "https://example.com/team-library", "classification": "internal"},
+    {"system": "slack", "label": "Approved project channel", "search_scope": "user-selected channel", "classification": "internal"}
+  ]
+}

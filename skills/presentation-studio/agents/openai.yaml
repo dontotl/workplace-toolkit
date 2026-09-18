@@ -1,0 +1,4 @@
+interface:
+  display_name: "Presentation Studio"
+  short_description: "Create reviewed local presentation narration"
+  default_prompt: "Use $presentation-studio to prepare this deck for reviewed local narration and media generation."

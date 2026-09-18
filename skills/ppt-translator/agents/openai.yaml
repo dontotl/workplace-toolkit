@@ -1,0 +1,4 @@
+interface:
+  display_name: "PPT Translator"
+  short_description: "Translate slides in Codex with local layout-safe processing"
+  default_prompt: "Use $ppt-translator to translate this deck through the approved Codex workspace and verify the output."
