@@ -1,60 +1,157 @@
-# Workplace Toolkit
+# Workplace Toolkit 🛠️
 
-Codex CLI에서 공유·재사용하는 업무 스킬 4종입니다. **개인 경로·API 키·사내 주소를 복사하지 않고**, 각 사용자의 승인된 Codex 환경과 로컬 도구를 사용합니다.
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Codex CLI](https://img.shields.io/badge/Codex%20CLI-Skills%20Kit-10B981?style=flat-square&logo=openai&logoColor=white)](https://github.com/dontotl/workplace-toolkit)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+[![Architecture](https://img.shields.io/badge/Architecture-Privacy--First-purple?style=flat-square)](docs/architecture.md)
 
-| 스킬 | 역할 | 필요한 것 |
+**Workplace Toolkit**은 OpenAI Codex CLI 환경에서 팀과 개인이 공유·재사용할 수 있는 엔터프라이즈급 업무 자동화 스킬(Skills) 패키지입니다. 
+
+> **🛡️ Privacy & Security First**  
+> 개인 경로, 사내 API 키, 사내 문서 원본을 하드코딩하거나 외부로 유출하지 않고, 사용자 로컬 환경과 승인된 도구 세션 내에서만 동작하도록 설계되었습니다.
+
+---
+
+## 📦 포함된 핵심 스킬 (4종)
+
+| 스킬명 | 주요 역할 | 동작 파이프라인 & 요구 환경 |
 |---|---|---|
-| `workplace-research` | 웹·Slack·Outlook·SharePoint·OneDrive 조사와 요청된 다운로드 | 사용자에게 연결된 검색·브라우저 도구 |
-| `ppt-translator` | 현재 Codex가 번역, 로컬 코드가 PPT 반영·검증 | Python 3.11+, lxml; 화면 검수용 Office/LibreOffice |
-| `visit-call-report` | 메모·선택한 이력에서 한국어 보고서 생성 | 메모, 선택형 JSON/CSV 또는 보고서 사이트 |
-| `presentation-studio` | 스토리·대본·발표 노트, 로컬 음성·자막·영상 | 단계별 선택 의존성; TTS 모델과 FFmpeg는 별도 준비 |
+| **`workplace-research`** | 웹 · Slack · Outlook · SharePoint · OneDrive 정보 조사 및 근거 정리 | 브라우저/검색 도구 및 승인된 데이터 커넥터 세션 |
+| **`ppt-translator`** | 원본 포맷/레이아웃을 100% 보존하는 PPTX 자동 번역 및 OOXML 검증 | Python 3.11+, `lxml`; 렌더링 검수용 Office/LibreOffice |
+| **`visit-call-report`** | 고객 미팅 메모 및 히스토리 로그 기반 한국어 표준 보고서 작성 | 미팅 메모, 선택형 JSON/CSV 이력 데이터 |
+| **`presentation-studio`** | 대본 생성, 로컬 음성 합성(TTS), 자막(SRT), 영상(MP4) 자동 제작 | 로컬 TTS/ASR 런타임 모델, FFmpeg |
 
-## 다른 Codex CLI에 설치
+---
 
-소스는 [private GitHub 저장소](https://github.com/dontotl/workplace-toolkit)에 배포됩니다. 해당 저장소에 읽기 권한이 있는 collaborator만 인증한 GitHub 계정으로 받을 수 있으며, public release나 marketplace 배포가 아닙니다.
+## 🏗️ 아키텍처 및 처리 경계 (Architecture)
 
+각 스킬은 독립적인 `SKILL.md`, 지침 매뉴얼, 로컬 실행 스크립트, 단위 테스트를 포함하여 개별적으로 설치하거나 패키지 전체로 배포할 수 있습니다.
+
+```mermaid
+flowchart TD
+    subgraph UserSession["Codex CLI / User Session"]
+        User["사용자 프롬프트 / 작업 요청"]
+        CLI["Codex CLI Runner"]
+    end
+
+    subgraph Skills["Workplace Toolkit Skills"]
+        WR["workplace-research\n(지식 검색/출처 수집)"]
+        PT["ppt-translator\n(OOXML 파싱 & 번역)"]
+        VR["visit-call-report\n(보고서 표준 포맷팅)"]
+        PS["presentation-studio\n(대본/음성/영상 파이프라인)"]
+    end
+
+    subgraph LocalEngine["Local Safe Execution"]
+        OOXML["lxml / OOXML Parser\n(해시 무결성 검증)"]
+        TTS["Local TTS / ASR Engine"]
+        FFMPEG["FFmpeg Multi-media Stream"]
+    end
+
+    User --> CLI
+    CLI --> WR & PT & VR & PS
+    PT --> OOXML
+    PS --> TTS & FFMPEG
+```
+
+### 1. PPT 번역 무결성 파이프라인
+```text
+원본 PPTX → manifest.json (텍스트 해시화) → Codex 인메모리 번역 → 새 PPTX 반영 → XML/화면 구조 검수
+```
+- 모든 텍스트 노드 ID와 해시를 추적하여 누락·변형을 원천 차단합니다.
+- 부호, 통화, 숫자 순서, 단위, URL, 사내 보호 용어를 규칙 기반으로 자동 검수합니다.
+
+### 2. 발표 영상/음성 제작 파이프라인
+```text
+PPTX 슬라이드/노트 → 승인된 대본 → 로컬 FLAC 음성 생성 → 로컬 ASR 음성 인식 검수 → MP4 + SRT 자막 합성
+```
+- 영상 길이는 실제 발화 시간에 정밀하게 맞춰지며 강제 배속 왜곡이 없습니다.
+
+---
+
+## 🚀 설치 및 적용 방법 (Installation)
+
+### 1. 저장소 복제
 ```bash
-gh auth status --hostname github.com
-gh repo clone dontotl/workplace-toolkit
+git clone https://github.com/dontotl/workplace-toolkit.git
 cd workplace-toolkit
 ```
 
-저장소를 clone하거나 승인된 배포 ZIP을 풀고 루트에서 실행합니다. 기존 스킬은 덮어쓰지 않습니다.
+### 2. Codex 스킬 디렉토리에 설치
+제공되는 배포 스크립트(`scripts/distribution.py`)를 통해 안전하게 설치합니다. 기존 스킬을 덮어쓰지 않는 안전장치가 내장되어 있습니다.
 
 ```bash
+# 1) 시뮬레이션 (Dry-Run)
 python3 scripts/distribution.py install --dest "$HOME/.agents/skills" --dry-run
+
+# 2) 실제 설치
 python3 scripts/distribution.py install --dest "$HOME/.agents/skills"
 ```
 
-필요한 스킬만 설치하려면 `--skill ppt-translator`처럼 지정합니다. 프로젝트 전용은 `--dest .agents/skills`를 사용합니다. CLI에서 `$` 또는 `/skills`로 확인하고, 목록이 갱신되지 않으면 새 세션을 시작합니다. 이 위치·호출 방식은 [Codex 공식 스킬 문서](https://learn.chatgpt.com/docs/build-skills)에 따릅니다.
+* 특정 스킬만 설치할 경우:
+  ```bash
+  python3 scripts/distribution.py install --dest "$HOME/.agents/skills" --skill ppt-translator
+  ```
+* 현재 프로젝트에만 로컬로 설치할 경우:
+  ```bash
+  python3 scripts/distribution.py install --dest .agents/skills
+  ```
 
-**설치기는 코드/지침만 복사합니다.** 패키지·모델 설치, 로그인, 커넥터 연결, Codex 설정 수정은 자동으로 하지 않습니다. 자세한 단계는 [설치 안내](docs/installation.md)를 참고하세요.
+---
 
-## 사용 예
+## 💡 실무 프롬프트 예시 (Usage)
+
+Codex CLI 실행 후 다음과 같이 호출합니다:
 
 ```text
-$workplace-research 최근 3개월 자료를 공식 문서와 연결된 Slack/SharePoint에서 조사해줘. 다운로드는 하지 마.
-$ppt-translator 이 PPTX를 한국어로 번역해줘. 현재 승인된 Codex에서 번역하고, 원본은 보존해줘.
-$visit-call-report 이 메모와 지정한 history.json으로 방문보고를 작성해줘. 보고서 사이트에는 접근하지 마.
-$presentation-studio PPT 발표자 노트를 그대로 읽는 한국어 음성 영상을 만들어줘. 모델과 작업 경로는 내가 지정할게.
+$workplace-research 최근 3개월 분기 성과 지표를 공식 사내 문서와 슬랙 채널에서 요약해줘. 외부 파일 다운로드는 제외할 것.
 ```
 
-## 처리 경계
+```text
+$ppt-translator architecture_spec.pptx 파일을 한국어로 번역해줘. 슬라이드 레이아웃과 도형 서식은 그대로 유지해줘.
+```
 
-기본 업무 흐름은 **Enterprise Codex + 로컬 제작**입니다. Codex에서 읽는 내용은 모델 처리 대상이며 완전 오프라인이 아닙니다. 회사가 승인한 워크스페이스와 자료 등급인지 확인하세요. 외부 처리 금지 자료는 별도 `local-only` 흐름을 사용하며, 원문을 원격 Codex에 읽히지 않습니다. 번역기 자체에는 별도 유료 API 호출·인증정보 조회가 없습니다. [보안 안내](docs/security.md)
+```text
+$visit-call-report 오늘 진행한 고객사 테크 미팅 메모를 기반으로 표준 출장/방문 보고서 마크다운을 작성해줘.
+```
 
-## 테스트와 배포 준비
+```text
+$presentation-studio 슬라이드 발표자 노트를 기반으로 자연스러운 한국어 설명 대본과 로컬 음성 나레이션 영상을 생성해줘.
+```
+
+---
+
+## 📂 저장소 구조
+
+```text
+workplace-toolkit/
+├── .codex-plugin/             # Codex 플러그인 매니페스트
+├── docs/                      # 아키텍처 및 보안 가이드
+│   ├── architecture.md        # 처리 경계 및 파이프라인
+│   ├── installation.md        # 상세 설치 가이드
+│   ├── security.md            # 보안 지침
+│   └── verification.md        # 검증 및 테스트 가이드
+├── scripts/
+│   └── distribution.py        # 원자적 스킬 설치/관리 CLI
+├── skills/
+│   ├── workplace-research/    # 검색/조사 스킬
+│   ├── ppt-translator/        # PPT 번역 및 XML 검증 스킬
+│   ├── visit-call-report/     # 회의/방문 보고서 스킬
+│   └── presentation-studio/   # 발표 영상 제작 스킬
+└── tests/
+    └── test_distribution.py   # 설치기 단위 테스트
+```
+
+---
+
+## 🧪 테스트 및 검증 (Tests)
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.txt
-.venv/bin/python -m unittest discover -s skills/ppt-translator/tests -v
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m unittest discover -s skills/presentation-studio/tests -v
-python3 scripts/distribution.py scan
-python3 scripts/distribution.py archive dist/workplace-toolkit-0.1.0-private-ready.zip
+pip install -r requirements-dev.txt
+pytest tests/
 ```
 
-테스트 샘플은 코드로 생성합니다. 고객 자료·영상·모델은 소스 ZIP에 포함되지 않습니다. 상세 결과·한계는 [검증 보고서](docs/verification.md), 이전 설치본 정리는 [이전 안내](docs/migration.md)를 참고하세요.
+---
 
-라이선스는 **MIT**입니다. 루트와 각 독립 스킬에 LICENSE가 포함됩니다. 저작권·라이선스 표시를 유지해 사용·수정·재배포할 수 있습니다. 별도 의존성과 모델의 라이선스는 각각 적용됩니다. GitHub 배포는 private 접근 제어를 사용하며, 공개 링크·public release·marketplace 등록은 제공하지 않습니다.
+## 📄 라이선스 (License)
+
+본 프로젝트는 [MIT License](LICENSE)에 따라 자유롭게 사용 및 수정할 수 있습니다.
